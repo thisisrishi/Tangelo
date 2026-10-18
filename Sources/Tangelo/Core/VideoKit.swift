@@ -195,21 +195,27 @@ enum VideoKit {
 
     private static func pump(output: AVAssetReaderOutput, input: AVAssetWriterInput, queue: String,
                              onTime: ((Double) -> Void)?) async {
+        /// Reader/writer pairs are confined to one serial queue, so sharing them is safe.
+        final class Pair: @unchecked Sendable {
+            let output: AVAssetReaderOutput, input: AVAssetWriterInput, onTime: ((Double) -> Void)?
+            var finished = false
+            init(_ o: AVAssetReaderOutput, _ i: AVAssetWriterInput, _ t: ((Double) -> Void)?) { output = o; input = i; onTime = t }
+        }
+        let pair = Pair(output, input, onTime)
         await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
             let q = DispatchQueue(label: "tangelo.pump.\(queue)")
-            var finished = false
-            input.requestMediaDataWhenReady(on: q) {
-                guard !finished else { return }
-                while input.isReadyForMoreMediaData, !finished {
-                    if let sb = output.copyNextSampleBuffer() {
-                        onTime?(CMSampleBufferGetPresentationTimeStamp(sb).seconds)
-                        if !input.append(sb) { finished = true }
+            pair.input.requestMediaDataWhenReady(on: q) {
+                guard !pair.finished else { return }
+                while pair.input.isReadyForMoreMediaData, !pair.finished {
+                    if let sb = pair.output.copyNextSampleBuffer() {
+                        pair.onTime?(CMSampleBufferGetPresentationTimeStamp(sb).seconds)
+                        if !pair.input.append(sb) { pair.finished = true }
                     } else {
-                        finished = true
+                        pair.finished = true
                     }
                 }
-                if finished {
-                    input.markAsFinished()
+                if pair.finished {
+                    pair.input.markAsFinished()
                     c.resume()
                 }
             }

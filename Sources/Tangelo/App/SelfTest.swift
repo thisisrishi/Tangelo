@@ -91,7 +91,7 @@ enum SelfTest {
         try? "1\n00:00:01,000 --> 00:00:02,500\nHello\n\n2\n00:00:03,000 --> 00:00:04,000\nWorld\n".write(to: srt, atomically: true, encoding: .utf8)
 
         // Images
-        for f in [ConversionFormat.jpg, .heic, .avif, .webp, .tiff, .gif, .bmp, .ico, .pdf] {
+        for f in [ConversionFormat.jpg, .heic, .avif, .webp, .tiff, .gif, .bmp, .ico, .pdf] where ImageIOKit.canWrite(f) {
             await check("image png → \(f.label)") { try await Converter.convert(png, to: f) { _ in } }
         }
         await check("compress image (preset)") { [try ImageOps.compress(png, preset: .small, targetBytes: nil, keepFormat: false)] }

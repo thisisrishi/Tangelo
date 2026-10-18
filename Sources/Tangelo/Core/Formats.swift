@@ -141,7 +141,7 @@ enum ConversionFormat: String, CaseIterable, Codable, Identifiable {
         case .archive: list = [.zip, .tar, .gzip]
         case .folder, .other: list = [.zip, .tar, .gzip]
         }
-        return list.filter { $0 != source }
+        return list.filter { $0 != source && ($0.category != .image || ImageIOKit.canWrite($0)) }
     }
 
     var utType: UTType? {

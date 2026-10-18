@@ -7,6 +7,18 @@ import UniformTypeIdentifiers
 enum ImageIOKit {
     static let ciContext = CIContext(options: [.useSoftwareRenderer: false])
 
+    static let writableTypes = Set((CGImageDestinationCopyTypeIdentifiers() as? [String]) ?? [])
+
+    /// Whether this Mac can produce the format (natively or through an installed helper).
+    static func canWrite(_ format: ConversionFormat) -> Bool {
+        switch format {
+        case .webp: return Helpers.cwebp != nil
+        case .avif: return writableTypes.contains("public.avif") || Helpers.ffmpeg != nil
+        case .heic: return writableTypes.contains("public.heic")
+        default: return true
+        }
+    }
+
     static func load(_ url: URL) throws -> CGImage {
         if let src = CGImageSourceCreateWithURL(url as CFURL, nil),
            let img = CGImageSourceCreateImageAtIndex(src, 0, [kCGImageSourceShouldCacheImmediately: true] as CFDictionary) {
@@ -48,6 +60,9 @@ enum ImageIOKit {
         case .webp:
             try writeWebP(image, to: url, quality: quality)
             return
+        case .avif where !writableTypes.contains("public.avif"):
+            try writeViaFFmpeg(image, to: url, args: ["-c:v", "libaom-av1", "-still-picture", "1", "-crf", String(Int((1 - quality) * 50 + 10))])
+            return
         case .pdf:
             let ns = NSImage(cgImage: image, size: CGSize(width: image.width, height: image.height))
             guard let page = PDFPage(image: ns) else { throw TangeloError.message("Could not create the PDF page.") }
@@ -80,6 +95,18 @@ enum ImageIOKit {
         p.arguments = ["-quiet", "-q", String(Int(quality * 100)), "-metadata", "none", tmp.path, "-o", url.path]
         try p.run(); p.waitUntilExit()
         guard p.terminationStatus == 0 else { throw TangeloError.message("The WebP encoder failed.") }
+    }
+
+    private static func writeViaFFmpeg(_ image: CGImage, to url: URL, args: [String]) throws {
+        let ffmpeg = try Helpers.requireFFmpeg()
+        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".png")
+        defer { try? FileManager.default.removeItem(at: tmp) }
+        try write(image, to: tmp, format: .png)
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: ffmpeg)
+        p.arguments = ["-y", "-v", "error", "-i", tmp.path] + args + [url.path]
+        try p.run(); p.waitUntilExit()
+        guard p.terminationStatus == 0 else { throw TangeloError.message("The image encoder failed.") }
     }
 
     static func resize(_ image: CGImage, maxDimension: Int) -> CGImage {

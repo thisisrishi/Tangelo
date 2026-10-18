@@ -588,7 +588,7 @@ struct ResizeEditor: View {
                 }
                 Picker("Format", selection: $format) {
                     Text("Keep original").tag(ConversionFormat?.none)
-                    ForEach([ConversionFormat.jpg, .png, .heic, .webp, .avif], id: \.self) { Text($0.label).tag(ConversionFormat?.some($0)) }
+                    ForEach([ConversionFormat.jpg, .png, .heic, .webp, .avif].filter(ImageIOKit.canWrite), id: \.self) { Text($0.label).tag(ConversionFormat?.some($0)) }
                 }
                 Section("Files") { ForEach(urls, id: \.self) { u in Text(u.lastPathComponent) } }
             }.formStyle(.grouped)
