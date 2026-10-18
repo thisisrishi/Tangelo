@@ -20,3 +20,5 @@ foreach ($s in $shots) {
   if (-not $p.WaitForExit(40000)) { $p.Kill(); Write-Warning "$name timed out" }
   if (Test-Path $target) { Write-Host "captured $name" } else { Write-Warning "no screenshot for $name (exit $($p.ExitCode))" }
 }
+$log = Join-Path $env:TEMP 'tangelo-demo-errors.log'
+if (Test-Path $log) { Write-Host '--- demo errors ---'; Get-Content $log }

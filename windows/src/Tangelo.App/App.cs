@@ -9,6 +9,7 @@ sealed class App : Application
 {
     const string PipeName = "Tangelo.Instance.v1";
     static Mutex? mutex;
+    bool demoMode;
 
     /// Hidden owner window used for share sheets and dialogs.
     public static Window Host { get; private set; } = null!;
@@ -40,7 +41,7 @@ sealed class App : Application
             return 0;
         }
 
-        var app = new App();
+        var app = new App { demoMode = demo };
         app.Startup += (_, _) => app.Start(files, demo ? args[1..] : null);
         return app.Run();
     }
@@ -53,6 +54,13 @@ sealed class App : Application
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         DispatcherUnhandledException += (_, e) =>
         {
+            if (demoMode)
+            {
+                // Never block unattended runs (CI screenshots) on a dialog.
+                Console.Error.WriteLine(e.Exception);
+                File.AppendAllText(Path.Combine(Path.GetTempPath(), "tangelo-demo-errors.log"), e.Exception + Environment.NewLine);
+                Environment.Exit(3);
+            }
             Alert("Something went wrong", e.Exception.Message);
             e.Handled = true;
         };

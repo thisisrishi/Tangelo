@@ -48,5 +48,8 @@ jobs:
           name: tangelo-windows
           path: |
             windows/artifacts/*.exe
-            windows/artifacts/*.zip
-            windows/artifacts/screenshots/*.png
+            windows/artifacts/Tangelo-windows-x64-portable.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tangelo-windows-screenshots
+          path: windows/artifacts/screenshots/*.png

@@ -86,13 +86,11 @@ public static partial class Documents
 
     public static string HtmlToMarkdown(string html)
     {
-        var converter = new ReverseMarkdown.Converter(new ReverseMarkdown.Config
-        {
-            GithubFlavored = true,
-            RemoveComments = true,
-            SmartHrefHandling = true,
-            UnknownTags = ReverseMarkdown.Config.UnknownTagsOption.Bypass,
-        });
+        var config = new ReverseMarkdown.Config { GithubFlavored = true };
+        config.Formatting.RemoveComments = true;
+        config.Links.SmartHref = true;
+        config.Tags.Unknown = ReverseMarkdown.Config.UnknownTagsOption.Bypass;
+        var converter = new ReverseMarkdown.Converter(config);
         return Regex.Replace(converter.Convert(Body(html)).Trim(), @"\n{3,}", "\n\n") + "\n";
     }
 
