@@ -451,7 +451,9 @@ public static class Media
                     .Text(W * 0.06, H * 0.08 + H / 18.0, o.Title).Draw(bgImg);
             bgImg.Write(bgPath, ImageMagick.MagickFormat.Png);
         }
-        var args = new List<string> { "-loop", "1", "-framerate", "30", "-i", bgPath, "-i", input };
+        // Bound the looped background to the audio length so filters never buffer an endless stream.
+        var duration = (await InfoAsync(input)).Duration;
+        var args = new List<string> { "-loop", "1", "-framerate", "30", "-t", F(Math.Max(duration, 0.1)), "-i", bgPath, "-i", input };
         var graph = $"[0:v]setsar=1,format=yuv420p[bg];[1:a]{wave}[w];[bg][w]overlay=(W-w)/2:(H-h)/2:shortest=1,format=yuv420p[v]";
         await Run([.. args, "-filter_complex", graph, "-map", "[v]", "-map", "1:a", "-c:v", "libx264", "-preset", "medium", "-crf", "22",
             "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", output]);
