@@ -33,6 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets\tray.ico" LogicalName="Tangelo.App.Assets.tray.ico" />
+    <EmbeddedResource Include="Assets\tangelo.ico" LogicalName="Tangelo.App.Assets.tangelo.ico" />
     <None Include="..\..\models\u2netp.onnx" Link="models\u2netp.onnx" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\..\models\u2netp.onnx')" />
   </ItemGroup>
 </Project>

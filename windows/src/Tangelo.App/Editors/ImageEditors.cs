@@ -95,10 +95,14 @@ sealed class AnnotateEditor : EditorWindow
         widthSlider.ValueChanged += (_, e) => width = e.NewValue;
         var textField = Ui.Field(text, v => text = v, 120);
         var zoomCombo = Ui.Combo([2.0, 3.0, 4.0], zoom, z => $"{z:0}×", z => zoom = z);
-        var toolbar = Ui.Row(8, kinds, swatch, widthSlider, Ui.Caption("Text", false), textField, zoomCombo,
+        var toolbar = new WrapPanel { Margin = new Thickness(0, 0, 0, 10) };
+        foreach (var e in new UIElement[] { kinds, swatch, widthSlider, Ui.Caption("Text", false), textField, zoomCombo,
             Ui.IconButton("", () => { if (annotations.Count > 0) { annotations.RemoveAt(annotations.Count - 1); refresh(); } }, "Undo last annotation"),
-            Ui.IconButton("", DeleteSelected, "Delete selected annotation"));
-        toolbar.Margin = new Thickness(0, 0, 0, 10);
+            Ui.IconButton("", DeleteSelected, "Delete selected annotation") })
+        {
+            if (e is FrameworkElement fe) { fe.Margin = new Thickness(0, 2, 8, 2); fe.VerticalAlignment = VerticalAlignment.Center; }
+            toolbar.Children.Add(e);
+        }
 
         canvas.SetOverlay(surface);
         surface.MouseLeftButtonDown += OnDown;

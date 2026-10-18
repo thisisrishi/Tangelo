@@ -53,6 +53,19 @@ static class Ui
         TextTrimming = wrap ? TextTrimming.None : TextTrimming.CharacterEllipsis,
     };
 
+    /// The app icon (largest frame of the embedded .ico) at the requested size.
+    public static Image Brand(double size)
+    {
+        var stream = typeof(Ui).Assembly.GetManifestResourceStream("Tangelo.App.Assets.tangelo.ico");
+        BitmapSource? src = null;
+        if (stream != null)
+        {
+            var decoder = new IconBitmapDecoder(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+            src = decoder.Frames.OrderByDescending(f => f.PixelWidth).First();
+        }
+        return new Image { Source = src, Width = size, Height = size };
+    }
+
     public static TextBlock Caption(string text, bool wrap = true) => Text(text, 12, brush: Theme.Subtle, wrap: wrap);
 
     public static TextBlock Glyph(string glyph, double size = 16, Brush? brush = null) => new()

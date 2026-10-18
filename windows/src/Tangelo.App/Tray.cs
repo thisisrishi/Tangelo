@@ -78,7 +78,7 @@ sealed class TrayPopup : Window
         Deactivated += (_, _) => Hide();
         Drop += (_, e) => { if (e.Data.GetData(DataFormats.FileDrop) is string[] f) { files = f.ToList(); Render(); } };
 
-        var header = Ui.Row(8, Ui.Glyph("", 18, Theme.Accent), Ui.Text("Tangelo", 15, FontWeights.SemiBold));
+        var header = Ui.Row(8, Ui.Brand(22), Ui.Text("Tangelo", 15, FontWeights.SemiBold));
         var footer = new DockPanel { Margin = new Thickness(0, 10, 0, 0) };
         var right = Ui.Row(0,
             Ui.IconButton("", () => { Hide(); SettingsWindow.ShowSingle(); }, "Settings"),
@@ -144,7 +144,7 @@ sealed class TrayPopup : Window
         var items = Actions.Items(tab, files);
         foreach (var item in items)
         {
-            var b = new Button { Height = 58, Margin = new Thickness(3), Content = Ui.Column(3, Ui.Glyph(item.Glyph, 16), Center(Ui.Text(item.Title, 10.5, FontWeights.SemiBold))) };
+            var b = new Button { Height = 58, Margin = new Thickness(3), HorizontalAlignment = HorizontalAlignment.Stretch, Content = Ui.Column(3, Ui.Glyph(item.Glyph, 16), Center(Ui.Text(item.Title, 10.5, FontWeights.SemiBold))) };
             b.Click += (_, _) => { var f = files; files = []; Hide(); item.Run(f); };
             grid.Children.Add(b);
         }

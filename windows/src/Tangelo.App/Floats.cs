@@ -191,7 +191,8 @@ sealed class FloatWindow : Window
         foreach (var p in paths)
         {
             if (tiles.Any(t => string.Equals(t.Path, p, StringComparison.OrdinalIgnoreCase))) continue;
-            tiles.Add(new Tile { Path = p, Thumb = Native.Thumbnail(p, 112) });
+            var thumb = Formats.CategoryOf(p) == FileCategory.Image ? Ui.LoadBitmap(p, 112) ?? Native.Thumbnail(p, 112) : Native.Thumbnail(p, 112);
+            tiles.Add(new Tile { Path = p, Thumb = thumb });
         }
         UpdateHeader();
         FloatManager.Save();

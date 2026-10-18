@@ -24,7 +24,24 @@ sealed class WheelWindow : Window
     readonly List<(Path Petal, FrameworkElement Label)> petals = [];
     readonly DispatcherTimer guard = new() { Interval = TimeSpan.FromMilliseconds(1400) };
 
+    Border? center;
+    string summary = "";
     WheelKind kind;
+
+    /// Built once: rebuilding would re-parent the label TextBlocks.
+    Border MakeCenter()
+    {
+        var b = new Border
+        {
+            Width = Inner * 2 - 8, Height = Inner * 2 - 8, CornerRadius = new CornerRadius(Inner),
+            Background = Theme.Surface, BorderBrush = Theme.Border, BorderThickness = new Thickness(1),
+            Child = Ui.Column(2, centerGlyph, centerTitle, centerKind),
+        };
+        ((StackPanel)b.Child).VerticalAlignment = VerticalAlignment.Center;
+        foreach (var t in new[] { centerTitle, centerKind }) { t.HorizontalAlignment = HorizontalAlignment.Center; t.MaxWidth = Inner * 2 - 16; }
+        Canvas.SetLeft(b, Size / 2 - Inner + 4); Canvas.SetTop(b, Size / 2 - Inner + 4);
+        return b;
+    }
     List<Actions.Item> items = [];
     List<string> files = [];
     int? highlighted;
@@ -86,7 +103,7 @@ sealed class WheelWindow : Window
         items = [];
         Build();
         centerGlyph.Text = "";
-        centerTitle.Text = "Move to load";
+        centerTitle.Text = summary = "Move to load";
         centerKind.Text = KindTitle;
         Left = at.X - Size / 2;
         Top = at.Y - Size / 2;
@@ -112,7 +129,7 @@ sealed class WheelWindow : Window
         }
         var cats = paths.Select(Core.Formats.CategoryOf).Distinct().ToList();
         centerGlyph.Text = cats.Count == 1 ? cats[0].Glyph() : "";
-        centerTitle.Text = items.Count == 0 ? "No options" : paths.Count == 1 ? System.IO.Path.GetExtension(paths[0]).TrimStart('.').ToUpperInvariant() : $"{paths.Count} files";
+        centerTitle.Text = summary = items.Count == 0 ? "No options" : paths.Count == 1 ? System.IO.Path.GetExtension(paths[0]).TrimStart('.').ToUpperInvariant() : $"{paths.Count} files";
         Build();
     }
 
@@ -145,15 +162,7 @@ sealed class WheelWindow : Window
             canvas.Children.Add(label);
             petals.Add((petal, label));
         }
-        var center = new Border
-        {
-            Width = Inner * 2 - 8, Height = Inner * 2 - 8, CornerRadius = new CornerRadius(Inner),
-            Background = Theme.Surface, BorderBrush = Theme.Border, BorderThickness = new Thickness(1),
-            Child = Ui.Column(2, centerGlyph, centerTitle, centerKind),
-        };
-        ((StackPanel)center.Child).VerticalAlignment = VerticalAlignment.Center;
-        foreach (var t in new[] { centerTitle, centerKind }) { t.HorizontalAlignment = HorizontalAlignment.Center; t.MaxWidth = Inner * 2 - 16; }
-        Canvas.SetLeft(center, Size / 2 - Inner + 4); Canvas.SetTop(center, Size / 2 - Inner + 4);
+        center ??= MakeCenter();
         canvas.Children.Add(center);
         Highlight(highlighted);
     }
@@ -195,7 +204,7 @@ sealed class WheelWindow : Window
             petals[k].Petal.Data = Wedge(k, petals.Count, Inner + 4, on ? Outer + 8 : Outer);
             foreach (var t in ((StackPanel)petals[k].Label).Children.OfType<TextBlock>()) t.Foreground = on ? Brushes.White : Theme.Text;
         }
-        centerTitle.Text = i is { } idx && idx < items.Count ? items[idx].Title : centerTitle.Text;
+        centerTitle.Text = i is { } idx && idx < items.Count ? items[idx].Title : summary;
     }
 
     static List<string> FilesFrom(DragEventArgs e) =>

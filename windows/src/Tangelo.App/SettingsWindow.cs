@@ -204,7 +204,7 @@ sealed class WelcomeWindow : Window
             text.MaxWidth = 420;
             return Ui.Row(12, badge, text);
         }
-        var icon = Ui.Glyph("", 56, Theme.Accent);
+        var icon = Ui.Brand(72);
         var title = Ui.Text("Welcome to Tangelo", 26, FontWeights.Bold); title.HorizontalAlignment = HorizontalAlignment.Center;
         var sub = Ui.Caption("Convert, edit and move files right where you drag them.", false); sub.HorizontalAlignment = HorizontalAlignment.Center;
         var steps = Ui.Card(Ui.Column(14,

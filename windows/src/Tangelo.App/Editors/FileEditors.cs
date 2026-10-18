@@ -356,7 +356,7 @@ sealed class OrganizePdfEditor : EditorWindow
         _ = Task.Run(() =>
         {
             int i = 0;
-            foreach (var img in Pdf.RenderPages(paths[0], 40))
+            foreach (var img in Pdf.RenderPages(paths[0], 72))
             {
                 using (img)
                 {
