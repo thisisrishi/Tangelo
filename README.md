@@ -6,13 +6,13 @@
 
 <p align="center">
   <b>Convert, edit and move files right where you drag them.</b><br>
-  A free, open-source macOS menu-bar utility with 45+ formats, 30+ tools and floating file shelves.
+  A free, open-source utility for <b>macOS</b> and <b>Windows</b> with 45+ formats, 30+ tools and floating file shelves.
 </p>
 
 <p align="center">
   <a href="https://github.com/thisisrishi/Tangelo/releases/latest"><img src="https://img.shields.io/github/v/release/thisisrishi/Tangelo?color=ff5200" alt="Release"></a>
   <img src="https://img.shields.io/badge/macOS-14%2B-blue" alt="macOS 14+">
-  <img src="https://img.shields.io/badge/Apple%20Silicon%20%2B%20Intel-universal-lightgrey" alt="Universal">
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4" alt="Windows 10 and 11">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License"></a>
 </p>
 
@@ -30,9 +30,11 @@ screenshot gets a gradient frame. The result appears next to the original, and t
 
 - **Works where you already are**: Finder, Desktop, any app you can drag files out of.
 - **Private**: everything runs locally. No accounts, analytics, ads or network calls.
-- **Native**: built on AVFoundation, Core Image, PDFKit and Vision. A 2 MB universal app.
+- **Native on both platforms**: Swift/SwiftUI on the Mac (AVFoundation, Core Image, PDFKit, Vision), C#/WPF on Windows.
 
 ## Install
+
+### macOS
 
 **Homebrew**
 
@@ -56,6 +58,17 @@ brew install webp     # WebP encoding
 
 Pages, Numbers and Keynote (free on the App Store) enable iWork and PowerPoint conversions.
 LibreOffice enables legacy `.xls`.
+
+### Windows
+
+Download **`TangeloSetup-x.y.z-x64.exe`** (per-user, no admin rights) or the portable zip from the
+[latest release](https://github.com/thisisrishi/Tangelo/releases/latest). ffmpeg, the .NET runtime and the
+background-removal model are bundled. Windows 10 (1809) or later.
+
+> Until releases are code-signed, SmartScreen may say *"Windows protected your PC"*: click **More info → Run anyway**.
+
+On Windows the wheels open with **Shift** (convert), **Ctrl** (tools) and **Alt** (actions); right-click
+files → **Tangelo…** works too. See the **[Windows guide](docs/WINDOWS.md)** for what's different.
 
 ## Quick start
 
@@ -135,6 +148,8 @@ Tangelo needs no Accessibility or Screen Recording access.
 
 ## Build from source
 
+### macOS
+
 Requires macOS 14+ and Swift 5.10+ (Xcode or just the Command Line Tools).
 
 ```sh
@@ -146,19 +161,28 @@ open build/Tangelo.app
 
 During development: `swift build && .build/debug/Tangelo`.
 
+### Windows
+
+Requires the .NET 10 SDK; see [Building on Windows](docs/WINDOWS.md#building-from-source).
+
+```powershell
+cd windows; ./scripts/fetch-model.ps1; dotnet build Tangelo.slnx -c Release
+```
+
 ### Self-test
 
 Tangelo ships with an end-to-end self-test that generates sample media and runs 70+ real
 conversions and tool operations:
 
 ```sh
-build/Tangelo.app/Contents/MacOS/Tangelo --selftest /tmp/tangelo-selftest
+build/Tangelo.app/Contents/MacOS/Tangelo --selftest /tmp/tangelo-selftest      # macOS
+Tangelo.exe --selftest %TEMP%\tangelo-selftest                                 # Windows
 ```
 
 ### Project layout
 
 ```
-Sources/Tangelo/
+Sources/Tangelo/            macOS app (Swift)
 ├── App/        App entry, menu bar, settings, job runner, dispatcher, self-test
 ├── Core/       Engines: images, audio (PCM), video, documents, PDF, spreadsheets, subtitles, archives
 ├── Tools/      Tool catalog and operations (image, video, audio, metadata)
@@ -166,11 +190,18 @@ Sources/Tangelo/
     ├── Wheel/  Global drag monitor and radial wheel
     ├── Float/  Floating file shelves and Quick Look
     └── Editors/ One SwiftUI editor per tool
+windows/                    Windows app (C#/.NET 10)
+├── src/Tangelo.Core/       Cross-platform engines and self-test
+├── src/Tangelo.Platform.Windows/  Windows OCR and face detection
+├── src/Tangelo.App/        WPF app: tray, wheels, Floats, editors
+├── installer/              Inno Setup script
+└── scripts/                Packaging, model download, screenshots
 ```
 
 ## Limitations
 
-- MP3/OGG/Opus/WMA encoding and MKV/WebM/AVI/WMV need `ffmpeg`; WebP encoding needs `cwebp`.
+- macOS: MP3/OGG/Opus/WMA encoding and MKV/WebM/AVI/WMV need `ffmpeg`; WebP encoding needs `cwebp`.
+- Windows: HEIC is input-only; iWork formats aren't supported; PPT/PPTX/DOC/XLS need LibreOffice.
 - DOCX export uses Apple's writer, which flattens tables and drops hyperlinks.
 - iWork and PowerPoint conversions automate Pages/Numbers/Keynote, or use LibreOffice.
 
