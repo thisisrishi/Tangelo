@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Tangelo.App/Tangelo.App.csproj" />
     <Project Path="src/Tangelo.Core/Tangelo.Core.csproj" />
     <Project Path="src/Tangelo.Platform.Windows/Tangelo.Platform.Windows.csproj" />
     <Project Path="src/Tangelo.SelfTest/Tangelo.SelfTest.csproj" />

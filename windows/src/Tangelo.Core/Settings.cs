@@ -62,6 +62,9 @@ public sealed class Settings
     static Settings? current;
     public static Settings Current => current ??= Load();
 
+    /// True when no settings file existed yet (first launch after install).
+    [JsonIgnore] public bool IsNew { get; private set; }
+
     static Settings Load()
     {
         try
@@ -70,7 +73,7 @@ public sealed class Settings
             if (File.Exists(path)) return JsonSerializer.Deserialize<Settings>(File.ReadAllText(path), Json) ?? new();
         }
         catch { }
-        return new();
+        return new() { IsNew = true };
     }
 
     public void Save()
