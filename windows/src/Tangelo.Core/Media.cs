@@ -437,7 +437,8 @@ public static class Media
             VisualizerStyle.Wave => $"showwaves=s={W}x{H / 2}:mode=cline:rate=30:colors=white:scale=sqrt{tint}",
             VisualizerStyle.Circle => $"avectorscope=s={H / 2}x{H / 2}:rate=30:rc=255:gc=255:bc=255:zoom=1.5:draw=line{tint}",
             VisualizerStyle.Mirror => $"showwaves=s={W}x{H / 2}:mode=p2p:rate=30:colors=white{tint}",
-            _ => $"showfreqs=s={W}x{H / 2}:mode=bar:ascale=sqrt:fscale=log:win_size=2048,fps=30{tint}",
+            // Vertical-line waveform reads as bars; showfreqs exhausts memory in some Windows ffmpeg builds.
+            _ => $"showwaves=s={W}x{H / 2}:mode=line:rate=30:colors=white:scale=sqrt:draw=full{tint}",
         };
         // Background and title are drawn with Magick.NET so no ffmpeg font support is needed.
         var bgPath = Path.Combine(Output.TempDirectory(), "bg.png");
