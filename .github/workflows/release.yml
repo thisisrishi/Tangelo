@@ -1,0 +1,26 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build universal app, DMG and zip
+        run: ./build.sh "${GITHUB_REF_NAME#v}"
+      - name: Self-test release binary
+        run: build/Tangelo.app/Contents/MacOS/Tangelo --selftest "$RUNNER_TEMP/selftest"
+      - name: Checksums
+        run: cd build && shasum -a 256 Tangelo.dmg Tangelo.zip > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes=$(awk '/^## /{n++} n==1' CHANGELOG.md | tail -n +2)
+          gh release create "$GITHUB_REF_NAME" build/Tangelo.dmg build/Tangelo.zip build/SHA256SUMS.txt \
+            --title "Tangelo ${GITHUB_REF_NAME#v}" --notes "$notes"
