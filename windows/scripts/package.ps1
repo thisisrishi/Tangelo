@@ -14,12 +14,12 @@ dotnet publish (Join-Path $root 'src/Tangelo.App') -c Release -r win-x64 --self-
   -p:PublishReadyToRun=true -p:Version=$Version -o $app
 if ($LASTEXITCODE -ne 0) { throw 'publish failed' }
 
-# ffmpeg (GPL build from BtbN): newest stable release line. Shipped as separate executables.
+# ffmpeg (GPL "shared" build from BtbN): newest stable line. ffmpeg.exe and ffprobe.exe share one set of DLLs.
 $ffZip = Join-Path $out 'ffmpeg.zip'
 $headers = @{ 'User-Agent' = 'tangelo-build' }
 if ($env:GITHUB_TOKEN) { $headers.Authorization = "Bearer $env:GITHUB_TOKEN" }
 $assets = (Invoke-RestMethod 'https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/tags/latest' -Headers $headers).assets
-$ff = $assets | Where-Object { $_.name -match '^ffmpeg-n(\d+)\.(\d+)-latest-win64-gpl-\d+\.\d+\.zip$' } |
+$ff = $assets | Where-Object { $_.name -match '^ffmpeg-n(\d+)\.(\d+)-latest-win64-gpl-shared-\d+\.\d+\.zip$' } |
   Sort-Object { [int]($_.name -replace '^ffmpeg-n(\d+)\.(\d+).*', '$1') * 100 + [int]($_.name -replace '^ffmpeg-n(\d+)\.(\d+).*', '$2') } -Descending |
   Select-Object -First 1
 if (-not $ff) { throw 'No stable ffmpeg build found' }
@@ -28,7 +28,7 @@ Invoke-WebRequest $ff.browser_download_url -OutFile $ffZip
 Expand-Archive $ffZip -DestinationPath (Join-Path $out 'ffmpeg')
 $ffDir = Get-ChildItem (Join-Path $out 'ffmpeg') -Directory | Select-Object -First 1
 New-Item -ItemType Directory (Join-Path $app 'tools\licenses') -Force | Out-Null
-Copy-Item (Join-Path $ffDir.FullName 'bin\ffmpeg.exe'), (Join-Path $ffDir.FullName 'bin\ffprobe.exe') (Join-Path $app 'tools')
+Get-ChildItem (Join-Path $ffDir.FullName 'bin') -Include 'ffmpeg.exe', 'ffprobe.exe', '*.dll' -Recurse | Copy-Item -Destination (Join-Path $app 'tools')
 Copy-Item (Join-Path $ffDir.FullName 'LICENSE.txt') (Join-Path $app 'tools\licenses\ffmpeg-LICENSE.txt')
 @"
 ffmpeg and ffprobe are separate programs distributed under the GNU GPL v3.
