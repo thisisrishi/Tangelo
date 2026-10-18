@@ -14,9 +14,17 @@ dotnet publish (Join-Path $root 'src/Tangelo.App') -c Release -r win-x64 --self-
   -p:PublishReadyToRun=true -p:Version=$Version -o $app
 if ($LASTEXITCODE -ne 0) { throw 'publish failed' }
 
-# ffmpeg (GPL build from BtbN, pinned release line). Shipped as separate executables.
+# ffmpeg (GPL build from BtbN): newest stable release line. Shipped as separate executables.
 $ffZip = Join-Path $out 'ffmpeg.zip'
-Invoke-WebRequest 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-win64-gpl-7.1.zip' -OutFile $ffZip
+$headers = @{ 'User-Agent' = 'tangelo-build' }
+if ($env:GITHUB_TOKEN) { $headers.Authorization = "Bearer $env:GITHUB_TOKEN" }
+$assets = (Invoke-RestMethod 'https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/tags/latest' -Headers $headers).assets
+$ff = $assets | Where-Object { $_.name -match '^ffmpeg-n(\d+)\.(\d+)-latest-win64-gpl-\d+\.\d+\.zip$' } |
+  Sort-Object { [int]($_.name -replace '^ffmpeg-n(\d+)\.(\d+).*', '$1') * 100 + [int]($_.name -replace '^ffmpeg-n(\d+)\.(\d+).*', '$2') } -Descending |
+  Select-Object -First 1
+if (-not $ff) { throw 'No stable ffmpeg build found' }
+Write-Host "Bundling $($ff.name)"
+Invoke-WebRequest $ff.browser_download_url -OutFile $ffZip
 Expand-Archive $ffZip -DestinationPath (Join-Path $out 'ffmpeg')
 $ffDir = Get-ChildItem (Join-Path $out 'ffmpeg') -Directory | Select-Object -First 1
 New-Item -ItemType Directory (Join-Path $app 'tools\licenses') -Force | Out-Null
